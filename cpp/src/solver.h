@@ -17,9 +17,19 @@ struct GrayScottParams {
   std::vector<int> index;
 };
 
-void TimeStep(std::vector<double> &u, std::vector<double> &v,
+void TimeStepSymRK2(std::vector<double> &u, std::vector<double> &v,
+              const GrayScottParams &);
+void TimeStepSym(std::vector<double> &u, std::vector<double> &v,
+                 std::vector<double> &uff, std::vector<double> &vff,
+                 const GrayScottParams &gs);
+void TimeStepSymRK2Seq(std::vector<double> &u, std::vector<double> &v,
               const GrayScottParams &);
 void CNXDir(double *pu, double *pv, const GrayScottParams &gs);
 void CNYDir(double *pu, double *pv, const GrayScottParams &gs);
 void SolveReaction(double *u, double *v, const GrayScottParams &gs);
+
+void TimeStepEuler(std::vector<double> &u, std::vector<double> &v,
+                   std::vector<double> &uTemp, std::vector<double> &vTemp, const GrayScottParams &gs);
+void TimeStepEulerSeq(std::vector<double> &u, std::vector<double> &v,
+                   std::vector<double> &uTemp, std::vector<double> &vTemp, const GrayScottParams &gs);
 #endif  // SOLVER_H

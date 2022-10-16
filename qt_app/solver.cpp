@@ -3,15 +3,8 @@
 #include <algorithm>
 #include <execution>
 #include <iostream>
-
 #include "linalg.h"
-void PrintVector(double *v, int n, bool add_endl) {
-  std::cout << v[0];
-  for (int i = 1; i < n; ++i) {
-    std::cout << ' ' << v[i];
-  }
-  if (add_endl) std::cout << std::endl;
-}
+#include "grayscott_utils.h"
 
 void GrayScottParams::Init(const double &pk, const double &pf,
                            const double &pmu, const double &pmv,
@@ -38,7 +31,7 @@ void GrayScottParams::Init(const double &pk, const double &pf,
   std::iota(index.begin(), index.end(), 0);
 };
 
-void TimeStep(std::vector<double> &u, std::vector<double> &v,
+void TimeStepSymRK2(std::vector<double> &u, std::vector<double> &v,
               const GrayScottParams &gs) {
   const auto exec_policy = std::execution::par_unseq;
   // xdir
@@ -61,7 +54,7 @@ void TimeStep(std::vector<double> &u, std::vector<double> &v,
   });
 }
 
-void TimeStepSeq(std::vector<double> &u, std::vector<double> &v,
+void TimeStepSymRK2Seq(std::vector<double> &u, std::vector<double> &v,
                  const GrayScottParams &gs) {
   std::for_each(gs.index.begin(), gs.index.end(), [&](int i) {
     CNXDir(u.data() + i * gs.n, v.data() + i * gs.n, gs);
@@ -136,22 +129,9 @@ void CNYDir(double *pu, double *pv, const GrayScottParams &gs) {
   delete[] rv;
 }
 
-// std::pair<double, double> fuv(const GrayScottParams gs, const double &u,
-// const double &v){
-//     double uv2 = u * v * v;
-//     return {-uv2 + gs.f * (1 - u), uv2 - (gs.f + gs.k) * v};
-// }
-
 void SolveReaction(double *u, double *v, const GrayScottParams &gs) {
   double uv2, uk1, vk1, uk2, vk2;
-  // double uk3, vk3, uk4, vk4;
   for (size_t k = 0; k < gs.n; ++k) {
-    //        std::tie(uk1, vk1) = fuv(gs, u[k], v[k]);
-    //        std::tie(uk2, vk2) = fuv(gs, u[k] + gs.dt*uk1, v[k] + gs.dt*vk1);
-    //        std::tie(uk3, vk3) = fuv(gs, u[k] + gs.dt*uk2, v[k] + gs.dt*vk2);
-    //        std::tie(uk4, vk4) = fuv(gs, u[k] + 2.0*gs.dt*uk3, v[k]
-    //        + 2.0*gs.dt*vk3); u[k] += 2.0*gs.dt*(uk1+2*(uk2+uk3)+uk4)/6; v[k]
-    //        += 2.0*gs.dt*(vk1+2*(vk2+vk3)+vk4)/6;
     uv2 = u[k] * v[k] * v[k];
     uk1 = u[k] + 0.5 * gs.dt * (-uv2 + gs.f * (1 - u[k]));
     vk1 = v[k] + 0.5 * gs.dt * (uv2 - (gs.f + gs.k) * v[k]);
@@ -172,4 +152,61 @@ void SolveReaction(double *u, double *v, const GrayScottParams &gs) {
     u[k] += gs.dt * uk2;
     v[k] += gs.dt * vk2;
   }
+}
+
+/////////////////////////////////////////////////////////////////
+//ou[i] = m_du * (-4 * u[i] + tu + bu + lu + ru) + sourceU(u[i], v[i]);
+//ov[i] = m_dv * (-4 * v[i] + tv + bv + lv + rv) + sourceV(u[i], v[i]);
+//double sourceU(double u, double v) {
+//return -u * v * v + m_f * (1 - u);
+//}
+//double sourceV(double u, double v) {
+//return u * v * v - (m_f + m_k) * v;
+//}
+
+void EulerInOneRow(MatrixWrapper &mU, MatrixWrapper &mV, double *uOut, double *vOut, int row, const GrayScottParams &gs){
+
+    const double *ptr_rowU = mU.GetRow(row);
+    const double *ptr_rowV = mV.GetRow(row);
+    double u, v, ts, bs, ls, rs;
+    double uv2;
+    for (int i=0; i<static_cast<int>(gs.n); ++i){
+        ts = mU(row-1,i);
+        bs = mU(row+1,i);
+        ls = mU(row,i-1);
+        rs = mU(row,i+1);
+        u = ptr_rowU[i];
+        v = ptr_rowV[i];
+        uv2 = u*v*v;
+        uOut[i] = u + gs.mu*(-4.0*u + ts + bs + ls + rs ) - uv2 + gs.f * (1 - u);
+
+        ts = mV(row-1,i);
+        bs = mV(row+1,i);
+        ls = mV(row,i-1);
+        rs = mV(row,i+1);
+        vOut[i] = v + gs.mv*(-4.0*v + ts + bs + ls + rs ) + uv2 - (gs.f + gs.k) * v;
+    }
+}
+
+void TimeStepEuler(std::vector<double> &u, std::vector<double> &v,
+                   std::vector<double> &uTemp, std::vector<double> &vTemp, const GrayScottParams &gs) {
+  const auto exec_policy = std::execution::par_unseq;
+  MatrixWrapper mU(u), mV(v);
+  std::for_each(exec_policy, gs.index.begin(), gs.index.end(), [&](int i) {
+    const size_t o = i * gs.n;
+    EulerInOneRow(mU, mV, uTemp.data()+o, vTemp.data()+o, i, gs);
+  });
+  std::swap(u, uTemp);
+  std::swap(v, vTemp);
+}
+
+void TimeStepEulerSeq(std::vector<double> &u, std::vector<double> &v,
+                   std::vector<double> &uTemp, std::vector<double> &vTemp, const GrayScottParams &gs) {
+    MatrixWrapper mU(u), mV(v);
+    std::for_each(gs.index.begin(), gs.index.end(), [&](int i) {
+      const size_t o = i * gs.n;
+      EulerInOneRow(mU, mV, uTemp.data()+o, vTemp.data()+o, i, gs);
+    });
+    std::swap(u, uTemp);
+    std::swap(v, vTemp);
 }

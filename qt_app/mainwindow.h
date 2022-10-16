@@ -14,6 +14,11 @@ QT_END_NAMESPACE
 
 class ImageViewer;
 
+struct GSPattern {
+    double f, k;
+    int pattern;
+};
+
 class MainWindow : public QMainWindow {
   Q_OBJECT
 
@@ -29,17 +34,27 @@ class MainWindow : public QMainWindow {
   void on_combo_box_uov__activated(int index);
   void on_combo_box_cmaps__currentTextChanged(const QString &arg1);
   void on_checkBoxParallel_clicked(bool checked);
+  void on_comboBox_currentTextChanged(const QString &arg1);
 
-private:
+  void on_comboBoxMethod_currentIndexChanged(int index);
+
+  void on_pushButtonSaveData_clicked();
+
+  void on_pushButtonSaveImage_clicked();
+
+  private:
   Ui::MainWindow *ui;
-  GrayScottSolver m_gray_scott_solver;
+  GrayScottSolver m_grayscottSolver;
   ImageViewer *m_viewer;
   void SetUp();
-  void UpdateParams();
+  void UpdateParams(bool reset);
   QMap<QString, ColorMapper::GradientPreset> m_name2gp;
+  QMap<QString, GSPattern> m_gsPatterns;
+  void enableGSParamEdit(bool enable);
 
  signals:
-  void StartSolver(int);
+  void StartSolverSymRK2(int);
+  void StartSolverEuler(int);
   void StopSolver();
 
  public slots:

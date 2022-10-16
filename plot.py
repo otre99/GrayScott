@@ -37,8 +37,13 @@ if __name__ == "__main__":
     if u is not None and v is not None:
         ax = plt.subplot(1,2,1)
         show_data(ax=ax, data=u, cmap=FLAGS.cmap, title="U data")
-        ax = plt.subplot(1,2,2)
+        ax = plt.subplot(1,2,2, sharex=ax, sharey=ax)
         show_data(ax=ax, data=v, cmap=FLAGS.cmap, title="V data")
+
+        #diff = np.abs(u-v)
+        #print( np.abs(u).max(), np.abs(v).max(), diff.max(), diff.mean())
+        #plt.figure()
+        #plt.imshow(diff)
     elif FLAGS.u is not None:
         show_data(ax=plt.gca(), data=u, cmap=FLAGS.cmap, title="U data")
     elif FLAGS.v is not None:

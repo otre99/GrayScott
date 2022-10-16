@@ -1,8 +1,20 @@
-#ifndef GRAYSCOTT_H
-#define GRAYSCOTT_H
+#ifndef GRAYSCOTT_UTILS_H
+#define GRAYSCOTT_UTILS_H
 #include <vector>
+#include <cmath>
 
-void InitializeP1(std::vector<double> &u, std::vector<double> &v);
-void InitializeP2(std::vector<double> &u, std::vector<double> &v);
+class MatrixWrapper {
+ public:
+  explicit MatrixWrapper(std::vector<double> &data);
+  double &operator()(int i, int j) const;
+  double *GetRow(int row);
 
-#endif  // GRAYSCOTT_H
+ private:
+  std::vector<double> *data_;
+  int n_;
+};
+
+void InitializeP0(std::vector<double> &u, std::vector<double> &v, int rseed);
+void InitializeP1(std::vector<double> &u, std::vector<double> &v, int rseed);
+
+#endif // GRAYSCOTT_H

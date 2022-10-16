@@ -1,5 +1,5 @@
 #include "linalg.h"
-
+#include <cstring>
 #include <algorithm>
 #include <cstring>
 
@@ -56,7 +56,8 @@ void CyclicPack(const double *a, double *b, const double *c, int n,
   b[n - 1] -= alpha * beta / gamma;
   z[0] = gamma;
   z[n - 1] = alpha;
-  std::fill(z + 1, z + n - 1, 0.0);
+  //std::fill(z + 1, z + n - 1, 0.0);
+  std::memset(z+1, 0, (n-2)*sizeof(double));
   Tridiag2(a, b, c, n, r, z, x, z);
   fact =
       (x[0] + beta * x[n - 1] / gamma) / (1.0 + z[0] + beta * z[n - 1] / gamma);
@@ -67,7 +68,8 @@ void CyclicPack(const double *a, double *b, const double *c, int n,
 void CyclicPackV1(const double *a, const double *b, const double *c, int n,
                   const double *r, double *x) {
   double *bb = new double[n];
-  std::copy(b, b + n, bb);
+  //std::copy(b, b + n, bb);
+  std::memcpy(bb,b,n*sizeof(double));
   CyclicPack(a, bb, c, n, r, x);
   delete[] bb;
 }

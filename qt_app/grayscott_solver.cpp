@@ -31,10 +31,19 @@ void GrayScottSolver::updateDpData() {
 }
 
 void GrayScottSolver::initParams(int dim, double du, double dv, double f,
-                                 double k, double dt) {
+                                 double k, double dt, bool reset, int method) {
   m_gsParams.Init(k, f, du, dv, dt, dim);
-  m_u.resize(dim * dim);
-  m_v.resize(dim * dim);
+  if (reset) {
+    m_u.resize(dim * dim);
+    m_v.resize(dim * dim);
+  }
+  if (method == 0) {
+    m_uTemp.resize(m_u.size());
+    m_vTemp.resize(m_v.size());
+  } else {
+    m_uTemp.clear();
+    m_vTemp.clear();
+  }
 }
 
 void GrayScottSolver::initialize(int pattern) {
@@ -48,20 +57,42 @@ void GrayScottSolver::initialize(int pattern) {
     default:
       break;
   }
+  m_currTime = 0.0;
   updateDpData();
 }
 
-void GrayScottSolver::solve(int n) {
+void GrayScottSolver::solveSymRK2(int n) {
   m_loopBreak = false;
-
-  //    auto
   while (true) {
     if (m_loopBreak) break;
-    for (int i = 0; i < n; ++i) {
-      (m_enableParallel) ? TimeStep(m_u, m_v, m_gsParams)
-                         : TimeStepSeq(m_u, m_v, m_gsParams);
-      if (m_loopBreak) break;
+    int i;
+    for (i = 0; i < n; ++i) {
+      (m_enableParallel) ? TimeStepSymRK2(m_u, m_v, m_gsParams)
+                         : TimeStepSymRK2Seq(m_u, m_v, m_gsParams);
+      if (m_loopBreak) {
+        break;
+      }
     }
+    m_currTime += 2 * i * m_gsParams.dt;
+    updateDpData();
+    emit dataReady();
+  }
+}
+
+void GrayScottSolver::solveEuler(int n) {
+  m_loopBreak = false;
+  while (true) {
+    if (m_loopBreak) break;
+    int i;
+    for (i = 0; i < n; ++i) {
+      (m_enableParallel)
+          ? TimeStepEuler(m_u, m_v, m_uTemp, m_vTemp, m_gsParams)
+          : TimeStepEulerSeq(m_u, m_v, m_uTemp, m_vTemp, m_gsParams);
+      if (m_loopBreak) {
+        break;
+      }
+    }
+    m_currTime += i;
     updateDpData();
     emit dataReady();
   }

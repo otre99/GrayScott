@@ -39,6 +39,9 @@ int main(int argc, char *argv[]) {
   arg_parser.SetDefaultValue("--p", "1", "Initial condition pattern");
   arg_parser.SetDefaultValue("--mv", "0.08", "V difussion coef");
   arg_parser.SetDefaultValue("--o", "./ ", "Output folder");
+  arg_parser.SetDefaultValue("--method", "0", "Method. 0-Euler 1-SymRK2");
+  arg_parser.SetDefaultValue("--rseed", "156", "See for random numbers");
+
 
   if (!arg_parser.Parse(argc, argv)) {
     arg_parser.PrintHelp();
@@ -49,22 +52,34 @@ int main(int argc, char *argv[]) {
   gsParams.Init(arg_parser.Get<double>("--k"), arg_parser.Get<double>("--f"),
                 arg_parser.Get<double>("--mu"), arg_parser.Get<double>("--mv"),
                 arg_parser.Get<double>("--dt"), arg_parser.Get<size_t>("--n"));
+
   const size_t NSTEPS = arg_parser.Get<size_t>("--nsteps");
   const int SV = arg_parser.Get<int>("--sv");
+  const int RSEED = arg_parser.Get<int>("--rseed");
+  const int METHOD = arg_parser.Get<int>("--method");
+
   const string OUTPUT_FOLDER = arg_parser.Get<string>("--o");
   cout << "Params: k=" << gsParams.k << " f=" << gsParams.f
        << " mu=" << gsParams.mu << " mv=" << gsParams.mv
        << " dt=" << gsParams.dt << " n=" << gsParams.n << " nsteps=" << NSTEPS
-       << " sv=" << SV << endl;
+       << " sv=" << SV << " rseed=" << RSEED
+       << " method: " << ((METHOD==0) ? "EULER" : "SymRK2") << endl;
+
 
   vector<double> u(gsParams.n * gsParams.n), v(gsParams.n * gsParams.n);
+  vector<double> uTemp, vTemp;
+  if (METHOD==0){
+      uTemp.resize(u.size());
+      vTemp.resize(v.size());
+  }
+
   const int pattern = arg_parser.Get<int>("--p");
   switch (pattern) {
     case 1:
-      InitializeP1(u, v);
+      InitializeP0(u, v, RSEED);
       break;
     case 2:
-      InitializeP2(u, v);
+      InitializeP1(u, v, RSEED);
       break;
     default:
       cerr << "Wrong initial pattern option. Valid options: [1, 2]" << endl;
@@ -82,7 +97,7 @@ int main(int argc, char *argv[]) {
       SaveToFile(OUTPUT_FOLDER + "/U" + fname, u);
       SaveToFile(OUTPUT_FOLDER + "/V" + fname, v);
     }
-    TimeStep(u, v, gsParams);
+    (METHOD==1) ? TimeStepSymRK2(u, v, gsParams) : TimeStepEuler(u,v,uTemp, vTemp, gsParams) ;
     if ((i + 1) % dp == 0) {
       cout << "\rIter " << i + 1;
       cout.flush();

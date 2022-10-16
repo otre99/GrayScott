@@ -18,6 +18,7 @@ class ImageViewer : public QAbstractScrollArea {
   void colorize();
   void attachImagePtr(QImage *ptr);
   void init();
+  const std::vector<double> &getData() const {return m_rawData;}
   QImage *imagePtr();
   double scale() const { return m_scaleFactor; }
   QRect canvasRect() const;
