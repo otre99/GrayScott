@@ -46,13 +46,16 @@ void GrayScottSolver::initParams(int dim, double du, double dv, double f,
   }
 }
 
-void GrayScottSolver::initialize(int pattern) {
+void GrayScottSolver::initialize(int pattern, bool with_noise) {
   switch (pattern) {
     case 0:
-      InitializeP0(m_u, m_v);
+      InitializeP0(m_u, m_v, with_noise);
       break;
     case 1:
-      InitializeP1(m_u, m_v);
+      InitializeP1(m_u, m_v, with_noise);
+      break;
+    case 2:
+      InitializeP2(m_u, m_v, with_noise);
       break;
     default:
       break;

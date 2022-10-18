@@ -14,7 +14,7 @@ class GrayScottSolver : public QObject {
   ~GrayScottSolver() override;
   void initParams(int dim, double du, double dv, double f, double k);
   void initParams(int dim, double du, double dv, double f, double k, double dt, bool reset, int method);
-  void initialize(int pattern);
+  void initialize(int pattern, bool with_noise);
   void initialize(const QImage &img);
   void updateDpData();
   size_t getSize() { return m_gsParams.n; }

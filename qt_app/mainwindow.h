@@ -35,11 +35,8 @@ class MainWindow : public QMainWindow {
   void on_combo_box_cmaps__currentTextChanged(const QString &arg1);
   void on_checkBoxParallel_clicked(bool checked);
   void on_comboBox_currentTextChanged(const QString &arg1);
-
   void on_comboBoxMethod_currentIndexChanged(int index);
-
   void on_pushButtonSaveData_clicked();
-
   void on_pushButtonSaveImage_clicked();
 
   private:

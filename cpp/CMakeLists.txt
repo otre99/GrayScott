@@ -13,7 +13,7 @@ add_executable(gray_scott_cpp
     src/linalg.cpp src/linalg.h
     src/solver.cpp src/solver.h
     src/simplecmdparser.hpp
-    src/grayscott.h src/grayscott.cpp
+    src/grayscott_utils.cpp src/grayscott_utils.h
 )
 
 target_link_libraries(gray_scott_cpp tbb pthread)

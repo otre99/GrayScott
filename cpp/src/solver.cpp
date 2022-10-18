@@ -4,7 +4,7 @@
 #include <execution>
 #include <iostream>
 #include "linalg.h"
-#include "grayscott.h"
+#include "grayscott_utils.h"
 
 void GrayScottParams::Init(const double &pk, const double &pf,
                            const double &pmu, const double &pmv,

@@ -4,27 +4,10 @@
 #include <fstream>
 #include <iostream>
 
-#include "grayscott.h"
+#include "grayscott_utils.h"
 #include "simplecmdparser.hpp"
 #include "solver.h"
 using namespace std;
-
-void SaveToFile(const string &fname, const vector<double> &values) {
-  ofstream ofile(fname, ios::binary | ios::out);
-  ofile.write(reinterpret_cast<const char *>(values.data()),
-              values.size() * sizeof(double));
-}
-
-bool LoadFromFile(const string &fname, vector<double> &values) {
-  ifstream ifile(fname, ios::binary | ios::in);
-  if (ifile) {
-    const long NBYTES = std::filesystem::file_size(fname);
-    values.resize(NBYTES / sizeof(double));
-    return NBYTES ==
-           ifile.read(reinterpret_cast<char *>(values.data()), NBYTES).gcount();
-  }
-  return false;
-}
 
 int main(int argc, char *argv[]) {
   SimpleCmdParser arg_parser;
@@ -36,12 +19,13 @@ int main(int argc, char *argv[]) {
   arg_parser.SetDefaultValue("--sv", "-1",
                              "Save partial solution every `sv` steps");
   arg_parser.SetDefaultValue("--mu", "0.16 ", "U difussion coef");
-  arg_parser.SetDefaultValue("--p", "1", "Initial condition pattern");
+  arg_parser.SetDefaultValue("--pattern", "0",
+                             "Initial condition pattern [0,1,2]");
   arg_parser.SetDefaultValue("--mv", "0.08", "V difussion coef");
   arg_parser.SetDefaultValue("--o", "./ ", "Output folder");
   arg_parser.SetDefaultValue("--method", "0", "Method. 0-Euler 1-SymRK2");
-  arg_parser.SetDefaultValue("--rseed", "156", "See for random numbers");
-
+  arg_parser.SetDefaultValue("--noise", "1",
+                             "Add noise to the initial condition");
 
   if (!arg_parser.Parse(argc, argv)) {
     arg_parser.PrintHelp();
@@ -63,28 +47,18 @@ int main(int argc, char *argv[]) {
        << " mu=" << gsParams.mu << " mv=" << gsParams.mv
        << " dt=" << gsParams.dt << " n=" << gsParams.n << " nsteps=" << NSTEPS
        << " sv=" << SV << " rseed=" << RSEED
-       << " method: " << ((METHOD==0) ? "EULER" : "SymRK2") << endl;
-
+       << " method: " << ((METHOD == 0) ? "EULER" : "SymRK2") << endl;
 
   vector<double> u(gsParams.n * gsParams.n), v(gsParams.n * gsParams.n);
   vector<double> uTemp, vTemp;
-  if (METHOD==0){
-      uTemp.resize(u.size());
-      vTemp.resize(v.size());
+  if (METHOD == 0) {
+    uTemp.resize(u.size());
+    vTemp.resize(v.size());
   }
 
-  const int pattern = arg_parser.Get<int>("--p");
-  switch (pattern) {
-    case 1:
-      InitializeP0(u, v, RSEED);
-      break;
-    case 2:
-      InitializeP1(u, v, RSEED);
-      break;
-    default:
-      cerr << "Wrong initial pattern option. Valid options: [1, 2]" << endl;
-      return -1;
-  }
+  const int pattern = arg_parser.Get<int>("--pattern");
+  const bool with_noise = arg_parser.Get<bool>("--noise");
+  Initialize(u, v, pattern, with_noise);
   const size_t dp = std::max(NSTEPS / 10, size_t(1));
   char fname[128];
   sprintf(fname, "ITER%08d", 0);
@@ -97,7 +71,8 @@ int main(int argc, char *argv[]) {
       SaveToFile(OUTPUT_FOLDER + "/U" + fname, u);
       SaveToFile(OUTPUT_FOLDER + "/V" + fname, v);
     }
-    (METHOD==1) ? TimeStepSymRK2(u, v, gsParams) : TimeStepEuler(u,v,uTemp, vTemp, gsParams) ;
+    (METHOD == 1) ? TimeStepSymRK2(u, v, gsParams)
+                  : TimeStepEuler(u, v, uTemp, vTemp, gsParams);
     if ((i + 1) % dp == 0) {
       cout << "\rIter " << i + 1;
       cout.flush();

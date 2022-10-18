@@ -21,6 +21,12 @@ double &MatrixWrapper::operator()(int i, int j) const {
 
 double *MatrixWrapper::GetRow(int row) { return data_->data() + row * n_; }
 
+// void RandomInit(vector<double> &u, vector<double> &v,
+//                uniform_real_distribution<double> &dist, mt19937 &mt) {
+//  generate(u.begin(), u.end(), [&]() { return 1 /*+ dist(mt)*/; });
+//  generate(v.begin(), v.end(), [&]() { return 0.0/*+dist(mt)*/; });
+//}
+
 constexpr double delta1 = 0.0;
 constexpr double delta2 = 0.05;
 const static double PI = std::acos(-1);
@@ -38,6 +44,23 @@ void AddRect(MatrixWrapper &&uu, MatrixWrapper &&vv, int i, int j, int r) {
       uu(ii, jj) = 0.5;
       vv(ii, jj) = 0.25;
     }
+  }
+}
+
+void Initialize(std::vector<double> &u, std::vector<double> &v, int pattern,
+                bool with_noise) {
+  switch (pattern) {
+    case 0:
+      InitializeP0(u, v, with_noise);
+      break;
+    case 1:
+      InitializeP1(u, v, with_noise);
+      break;
+    case 2:
+      InitializeP2(u, v, with_noise);
+      break;
+    default:
+      throw("Wrong initial pattern option. Valid options: [0, 1, 2]");
   }
 }
 

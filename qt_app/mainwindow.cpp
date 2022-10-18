@@ -1,14 +1,14 @@
 #include "mainwindow.h"
 
 #include <QDebug>
+#include <QFileDialog>
 #include <QMap>
 #include <QPainter>
 #include <cmath>
-#include <QFileDialog>
-#include "./ui_mainwindow.h"
-#include "imageviewer.h"
-#include "grayscott_utils.h"
 
+#include "./ui_mainwindow.h"
+#include "grayscott_utils.h"
+#include "imageviewer.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
@@ -22,10 +22,10 @@ void MainWindow::on_push_button_run__clicked() {
   if (!m_grayscottSolver.isRunning()) {
     UpdateParams(false);
 
-    if (ui->comboBoxMethod->currentIndex()==0){
-        emit StartSolverEuler(ui->spin_box_iters_->value());
+    if (ui->comboBoxMethod->currentIndex() == 0) {
+      emit StartSolverEuler(ui->spin_box_iters_->value());
     } else {
-        emit StartSolverSymRK2(ui->spin_box_iters_->value());
+      emit StartSolverSymRK2(ui->spin_box_iters_->value());
     }
     ui->push_button_run_->setText("Stop");
     ui->group_box_params_->setEnabled(false);
@@ -38,7 +38,8 @@ void MainWindow::on_push_button_run__clicked() {
 
 void MainWindow::on_push_button_init__clicked() {
   UpdateParams(true);
-  m_grayscottSolver.initialize(ui->comboBoxPattern->currentIndex());
+  m_grayscottSolver.initialize(ui->comboBoxPattern->currentIndex(),
+                               ui->checkBoxNoise->isChecked());
   UpdatePlot();
 }
 
@@ -65,31 +66,30 @@ void MainWindow::SetUp() {
   m_name2gp["gpHues"] = ColorMapper::gpHues;
 
   //
-  m_gsPatterns["type-alpha-01"]={0.010, 0.047, 0};
-  m_gsPatterns["type-alpha-02"]={0.014, 0.053, 0};
-  m_gsPatterns["type-beta-01"]={0.014, 0.039, 0};
-  m_gsPatterns["type-beta-02"]={0.026, 0.051, 0};
-  m_gsPatterns["type-gamma-01"]={0.022, 0.051, 0};
-  m_gsPatterns["type-gamma-02"]={0.026, 0.055, 0};
-  m_gsPatterns["type-delta-01"]={0.030, 0.055, 0};
-  m_gsPatterns["type-delta-02"]={0.042, 0.059, 0};
-  m_gsPatterns["type-epsilon-01"]={0.018, 0.055, 0};
-  m_gsPatterns["type-epsilon-02"]={0.022, 0.059, 0};
-  m_gsPatterns["type-zeta-01"]={0.022, 0.061, 0};
-  m_gsPatterns["type-zeta-02"]={0.026, 0.059, 0};
-  m_gsPatterns["type-eta-01"]={0.034, 0.063, 0};
-  m_gsPatterns["type-theta-01"]={0.030, 0.057, 0};
-  m_gsPatterns["type-theta-02"]={0.038, 0.061, 0};
-  m_gsPatterns["type-iota-01"]={0.046, 0.0594, 0};
-  m_gsPatterns["type-kappa-01"]={0.050, 0.063, 0};
-  m_gsPatterns["type-kappa-02"]={0.058, 0.063, 0};
-  m_gsPatterns["type-lambda-01"]={0.026, 0.061, 0};
-  m_gsPatterns["type-lambda-02"]={0.034, 0.065, 0};
-  m_gsPatterns["type-mu-01"]={0.046, 0.065, 0};
-  m_gsPatterns["type-mu-02"]={0.058, 0.065, 0};
-  m_gsPatterns["type-xi-01"]={0.014, 0.047, 0};
-  m_gsPatterns["type-pi-01"]={0.062, 0.061, 0};
-
+  m_gsPatterns["type-alpha-01"] = {0.010, 0.047, 0};
+  m_gsPatterns["type-alpha-02"] = {0.014, 0.053, 0};
+  m_gsPatterns["type-beta-01"] = {0.014, 0.039, 0};
+  m_gsPatterns["type-beta-02"] = {0.026, 0.051, 0};
+  m_gsPatterns["type-gamma-01"] = {0.022, 0.051, 0};
+  m_gsPatterns["type-gamma-02"] = {0.026, 0.055, 0};
+  m_gsPatterns["type-delta-01"] = {0.030, 0.055, 0};
+  m_gsPatterns["type-delta-02"] = {0.042, 0.059, 0};
+  m_gsPatterns["type-epsilon-01"] = {0.018, 0.055, 0};
+  m_gsPatterns["type-epsilon-02"] = {0.022, 0.059, 0};
+  m_gsPatterns["type-zeta-01"] = {0.022, 0.061, 0};
+  m_gsPatterns["type-zeta-02"] = {0.026, 0.059, 0};
+  m_gsPatterns["type-eta-01"] = {0.034, 0.063, 0};
+  m_gsPatterns["type-theta-01"] = {0.030, 0.057, 0};
+  m_gsPatterns["type-theta-02"] = {0.038, 0.061, 0};
+  m_gsPatterns["type-iota-01"] = {0.046, 0.0594, 0};
+  m_gsPatterns["type-kappa-01"] = {0.050, 0.063, 0};
+  m_gsPatterns["type-kappa-02"] = {0.058, 0.063, 0};
+  m_gsPatterns["type-lambda-01"] = {0.026, 0.061, 0};
+  m_gsPatterns["type-lambda-02"] = {0.034, 0.065, 0};
+  m_gsPatterns["type-mu-01"] = {0.046, 0.065, 0};
+  m_gsPatterns["type-mu-02"] = {0.058, 0.065, 0};
+  m_gsPatterns["type-xi-01"] = {0.014, 0.047, 0};
+  m_gsPatterns["type-pi-01"] = {0.062, 0.061, 0};
 
   connect(&m_grayscottSolver, &GrayScottSolver::dataReady, this,
           &MainWindow::UpdatePlot);
@@ -131,53 +131,48 @@ void MainWindow::on_checkBoxParallel_clicked(bool checked) {
   m_grayscottSolver.enableParallel(checked);
 }
 
-void MainWindow::on_comboBox_currentTextChanged(const QString &arg1)
-{
-    if (arg1=="custom"){
-        enableGSParamEdit(true);
-        return;
+void MainWindow::on_comboBox_currentTextChanged(const QString &arg1) {
+  if (arg1 == "custom") {
+    enableGSParamEdit(true);
+    return;
+  }
+  const auto gs = m_gsPatterns[arg1];
+  ui->comboBoxPattern->setCurrentIndex(gs.pattern);
+  ui->le_f->setText(QString::number(gs.f));
+  ui->le_k->setText(QString::number(gs.k));
+  enableGSParamEdit(false);
+  on_push_button_init__clicked();
+}
+
+void MainWindow::enableGSParamEdit(bool enable) {
+  ui->comboBoxPattern->setEnabled(enable);
+  ui->le_du->setEnabled(enable);
+  ui->le_dv->setEnabled(enable);
+  ui->le_f->setEnabled(enable);
+  ui->le_k->setEnabled(enable);
+}
+
+void MainWindow::on_comboBoxMethod_currentIndexChanged(int index) {
+  if (index == 0) {
+    ui->line_dt->setText("1.0");
+    ui->line_dt->setEnabled(false);
+  } else {
+    ui->line_dt->setEnabled(true);
+  }
+}
+
+void MainWindow::on_pushButtonSaveData_clicked() {
+  QString fname = QFileDialog::getSaveFileName(this, "Save data");
+  if (!fname.isEmpty()) {
+    SaveToFile(fname.toStdString(), m_viewer->getData());
+  }
+}
+
+void MainWindow::on_pushButtonSaveImage_clicked() {
+  QString fname = QFileDialog::getSaveFileName(this, "Save data");
+  if (!fname.isEmpty()) {
+    if (m_viewer->imagePtr()) {
+      m_viewer->imagePtr()->save(fname);
     }
-    const auto gs = m_gsPatterns[arg1];
-    ui->comboBoxPattern->setCurrentIndex(gs.pattern);
-    ui->le_f->setText(QString::number(gs.f));
-    ui->le_k->setText(QString::number(gs.k));
-    enableGSParamEdit(false);
-    on_push_button_init__clicked();
+  }
 }
-
-void  MainWindow::enableGSParamEdit(bool enable){
-    ui->comboBoxPattern->setEnabled(enable);
-    ui->le_du->setEnabled(enable);
-    ui->le_dv->setEnabled(enable);
-    ui->le_f->setEnabled(enable);
-    ui->le_k->setEnabled(enable);
-}
-
-void MainWindow::on_comboBoxMethod_currentIndexChanged(int index)
-{
-    if (index==0){
-        ui->line_dt->setText("1.0");
-        ui->line_dt->setEnabled(false);
-    } else {
-        ui->line_dt->setEnabled(true);
-    }
-}
-
-void MainWindow::on_pushButtonSaveData_clicked()
-{
-    QString fname = QFileDialog::getSaveFileName(this,"Save data");
-    if (!fname.isEmpty()){
-        SaveToFile(fname.toStdString(), m_viewer->getData());
-    }
-}
-
-void MainWindow::on_pushButtonSaveImage_clicked()
-{
-    QString fname = QFileDialog::getSaveFileName(this,"Save data");
-    if (!fname.isEmpty()){
-        if (m_viewer->imagePtr()){
-            m_viewer->imagePtr()->save(fname);
-        }
-    }
-}
-
