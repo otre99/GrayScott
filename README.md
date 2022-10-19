@@ -55,9 +55,9 @@ python3 anim.py --folder data --cmap hot
 Use the `--sv` with program  `gray_scott_cpp`  option to control the number of saved partial solutions. 
 You can see some animation here:
 * [f=0.058 k=0.063](https://www.youtube.com/watch?v=AXQtNAJQK_k)
-* [ f=0.030 k=0.055](https://www.youtube.com/watch?v=Ekct6MDxsTc)
+* [f=0.030 k=0.055](https://www.youtube.com/watch?v=Ekct6MDxsTc)
 * [f=0.014 k=0.047](https://www.youtube.com/watch?v=Cve-uqOWUz8) 
-* [f=0.014, k=0.053](https://www.youtube.com/watch?v=krdEEUyB0vg)
+* [f=0.014 k=0.053](https://www.youtube.com/watch?v=krdEEUyB0vg)
 
 #### Create video:
 ```

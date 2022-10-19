@@ -7,6 +7,9 @@
 #include "grayscott_utils.h"
 #include "simplecmdparser.hpp"
 #include "solver.h"
+#include <bits/stdc++.h>
+
+
 using namespace std;
 
 int main(int argc, char *argv[]) {
@@ -71,8 +74,8 @@ int main(int argc, char *argv[]) {
       SaveToFile(OUTPUT_FOLDER + "/U" + fname, u);
       SaveToFile(OUTPUT_FOLDER + "/V" + fname, v);
     }
-    (METHOD == 1) ? TimeStepSymRK2(u, v, gsParams)
-                  : TimeStepEuler(u, v, uTemp, vTemp, gsParams);
+    (METHOD == 1) ? TimeStepSymRK2(u, v, gsParams)/*TimeStepSymRK2(u, v, gsParams)*/
+                  : TimeStepEuler(u, v, uTemp, vTemp, gsParams);/*TimeStepEuler(u, v, uTemp, vTemp, gsParams)*/;
     if ((i + 1) % dp == 0) {
       cout << "\rIter " << i + 1;
       cout.flush();
