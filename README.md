@@ -1,6 +1,6 @@
 # GrayScott
 
-## Program: gray_scott_cpp
+## Program: **gray_scott_cpp**
 
 ### Build:
 ```
@@ -64,7 +64,23 @@ You can see some animation here:
 python3 to_movie.py --folder data --cmap hot --output animation.mp4 
 ``` 
 
-## Program: qt_gray_scott 
+## Program: **gray_scott_fortran**
+
+Fortran90 implementation 
+
+### Build:
+```
+$ cd fortran90
+$ mkdir build 
+$ cd build 
+$ cmake ../ 
+$ make 
+```
+
+
+
+
+## Program: **qt_gray_scott** 
 
 This program is a GUI for the `gray_scott_cpp` program. You must use QtSDK 6.4 to compile the program.
 ```
