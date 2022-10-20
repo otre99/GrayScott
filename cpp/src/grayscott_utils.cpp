@@ -7,6 +7,17 @@
 
 using namespace std;
 
+void PrintMatrix(const double *data, int n, int m, bool new_line) {
+  size_t idx = 0;
+  for (int i = 0; i < n; ++i) {
+    for (int j = 0; j < m; ++j) {
+      std::printf("%21.17f     ", data[idx++]);
+    }
+    if (i < n - 1) std::printf("\n");
+  }
+  if (new_line) std::printf("\n");
+}
+
 MatrixWrapper::MatrixWrapper(std::vector<double> &data) : data_(&data) {
   n_ = static_cast<int>(std::sqrt(data_->size()));
 }

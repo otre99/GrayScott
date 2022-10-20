@@ -4,7 +4,6 @@
 #include <execution>
 #include <iostream>
 
-#include "grayscott_utils.h"
 #include "linalg.h"
 
 void GrayScottParams::Init(const double &pk, const double &pf,
@@ -89,9 +88,6 @@ void CNXDir(double *pu, double *pv, const GrayScottParams &gs) {
   }
   ru[j] = (pu[0] + pu[j - 1]) * gs.uf + (1 - 2 * gs.uf) * pu[j];
   rv[j] = (pv[0] + pv[j - 1]) * gs.vf + (1 - 2 * gs.vf) * pv[j];
-
-  //  Tridiag(gs.au.data(), gs.bu.data(), gs.cu.data(), N, ru, pu);
-  //  Tridiag(gs.av.data(), gs.bv.data(), gs.cv.data(), N, rv, pv);
   CyclicPackV1(gs.au.data(), gs.bu.data(), gs.cu.data(), N, ru, pu);
   CyclicPackV1(gs.av.data(), gs.bv.data(), gs.cv.data(), N, rv, pv);
   delete[] ru;

@@ -15,6 +15,7 @@ class MatrixWrapper {
   int n_;
 };
 
+void PrintMatrix(const double* data, int n, int m=1, bool new_line=true);
 void Initialize(std::vector<double> &u, std::vector<double> &v, int pattern,
                 bool with_noise);
 void InitializeP0(std::vector<double> &u, std::vector<double> &v,

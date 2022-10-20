@@ -10,11 +10,14 @@ module gs_types
 
     type grayscott_params
         real(dp) :: f, k, mu, mv, dt 
+        real(dp) :: uf, vf 
         integer :: method 
         real(dp), dimension(:,:), allocatable :: u, v
-        real(dp), dimension(:,:), allocatable :: tempu, tempv 
+        real(dp), dimension(:,:), allocatable :: tu, tv 
         real(dp), dimension(:), allocatable :: au, bu, cu
         real(dp), dimension(:), allocatable :: av, bv, cv
+        logical :: sol_in_uv
+
     end type grayscott_params
 end module gs_types 
 

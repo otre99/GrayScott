@@ -3,6 +3,7 @@ use gs_types
 
 contains
 subroutine init_all(gs, n, pattern, with_noise, method)
+    use gs_numeric_utils, only : throw_exception
     implicit none
     type(grayscott_params), intent(inout) :: gs
     integer, intent(in) :: n, pattern, method
@@ -12,8 +13,25 @@ subroutine init_all(gs, n, pattern, with_noise, method)
     if (method .eq. 2) then 
         allocate(gs%au(n), gs%bu(n), gs%cu(n) )
         allocate(gs%av(n), gs%bv(n), gs%cv(n) )
+        gs%uf = 0.5 * gs%dt * gs%mu        
+        gs%vf = 0.5 * gs%dt * gs%mv 
+        
+        gs%au(:) = -gs%uf 
+        gs%bu(:) = 1+2*gs%uf 
+        gs%cu(:) = -gs%uf                 
+
+        gs%av(:) = -gs%vf 
+        gs%bv(:) = 1+2*gs%vf 
+        gs%cv(:) = -gs%vf      
+
+    else if (method .eq. 1) then
+        allocate(gs%tu(n,n), gs%tv(n,n))   
+        if (gs%dt .ne. 1.0) then 
+            write(*,*) "EULER method only support Dt = 1, so we will use dt = 1"
+            gs%dt = 1.0
+        endif                 
     else 
-        allocate(gs%tempu(n,n), gs%tempv(n,n))   
+        call throw_exception("Wrong method, valid are [1 and 2]")
     endif 
 
     if (pattern .eq. 1) then 
@@ -25,6 +43,7 @@ subroutine init_all(gs, n, pattern, with_noise, method)
     endif 
 
     gs%method = method
+    gs%sol_in_uv = .true.
 
 end subroutine init_all
 

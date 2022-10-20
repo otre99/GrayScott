@@ -12,7 +12,7 @@ endif (NOT CMAKE_BUILD_TYPE)
 
 get_filename_component(Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
 if (Fortran_COMPILER_NAME MATCHES "gfortran.*")
-    set (CMAKE_Fortran_FLAGS_RELEASE "-O2 -fopenmp") 
+    set (CMAKE_Fortran_FLAGS_RELEASE "-O3 -fopenmp") 
 endif (Fortran_COMPILER_NAME MATCHES "gfortran.*")
 
 SET(SRC src/gs_types.f90 
@@ -20,6 +20,8 @@ SET(SRC src/gs_types.f90
         src/gs_solver.f90
         src/gs_io.f90
         src/gs_main.f90
+        src/gs_numeric_utils.f90
+        src/gs_linalg.f90
         )
 
 add_executable(${PROJECT_NAME} ${SRC})

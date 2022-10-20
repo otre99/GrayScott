@@ -36,8 +36,14 @@ subroutine save_sol(gs, iter, outf)
     character(len=128), intent(in) :: outf
     integer, intent(in) :: iter 
 
-    call save_matrix_to_file(trim(outf)//gen_outname_u(iter),gs%u)
-    call save_matrix_to_file(trim(outf)//gen_outname_v(iter),gs%v)
+    
+    if (gs%sol_in_uv .eqv. .true.) then            
+        call save_matrix_to_file(trim(outf)//gen_outname_u(iter),gs%u)
+        call save_matrix_to_file(trim(outf)//gen_outname_v(iter),gs%v)
+    else 
+        call save_matrix_to_file(trim(outf)//gen_outname_u(iter),gs%tu)
+        call save_matrix_to_file(trim(outf)//gen_outname_v(iter),gs%tv)
+    endif 
 end subroutine save_sol
 
 end module gs_io

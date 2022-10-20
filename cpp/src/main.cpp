@@ -7,8 +7,6 @@
 #include "grayscott_utils.h"
 #include "simplecmdparser.hpp"
 #include "solver.h"
-#include <bits/stdc++.h>
-
 
 using namespace std;
 
@@ -42,15 +40,14 @@ int main(int argc, char *argv[]) {
 
   const size_t NSTEPS = arg_parser.Get<size_t>("--nsteps");
   const int SV = arg_parser.Get<int>("--sv");
-  const int RSEED = arg_parser.Get<int>("--rseed");
   const int METHOD = arg_parser.Get<int>("--method");
 
   const string OUTPUT_FOLDER = arg_parser.Get<string>("--o");
   cout << "Params: k=" << gsParams.k << " f=" << gsParams.f
        << " mu=" << gsParams.mu << " mv=" << gsParams.mv
        << " dt=" << gsParams.dt << " n=" << gsParams.n << " nsteps=" << NSTEPS
-       << " sv=" << SV << " rseed=" << RSEED
-       << " method: " << ((METHOD == 0) ? "EULER" : "SymRK2") << endl;
+       << " sv=" << SV << " method: " << ((METHOD == 0) ? "EULER" : "SymRK2")
+       << endl;
 
   vector<double> u(gsParams.n * gsParams.n), v(gsParams.n * gsParams.n);
   vector<double> uTemp, vTemp;
@@ -62,6 +59,7 @@ int main(int argc, char *argv[]) {
   const int pattern = arg_parser.Get<int>("--pattern");
   const bool with_noise = arg_parser.Get<bool>("--noise");
   Initialize(u, v, pattern, with_noise);
+
   const size_t dp = std::max(NSTEPS / 10, size_t(1));
   char fname[128];
   sprintf(fname, "ITER%08d", 0);
@@ -74,15 +72,19 @@ int main(int argc, char *argv[]) {
       SaveToFile(OUTPUT_FOLDER + "/U" + fname, u);
       SaveToFile(OUTPUT_FOLDER + "/V" + fname, v);
     }
-    (METHOD == 1) ? TimeStepSymRK2(u, v, gsParams)/*TimeStepSymRK2(u, v, gsParams)*/
-                  : TimeStepEuler(u, v, uTemp, vTemp, gsParams);/*TimeStepEuler(u, v, uTemp, vTemp, gsParams)*/;
+    (METHOD == 1)
+        ? TimeStepSymRK2(u, v, gsParams) /*TimeStepSymRK2(u, v, gsParams)*/
+        : TimeStepEuler(
+              u, v, uTemp, vTemp,
+              gsParams); /*TimeStepEuler(u, v, uTemp, vTemp, gsParams)*/
+    ;
     if ((i + 1) % dp == 0) {
       cout << "\rIter " << i + 1;
       cout.flush();
     }
   }
-  SaveToFile(OUTPUT_FOLDER + "/UFINAL.dat", u);
-  SaveToFile(OUTPUT_FOLDER + "/VFINAL.dat", v);
+  SaveToFile(OUTPUT_FOLDER + "/UFINAL", u);
+  SaveToFile(OUTPUT_FOLDER + "/VFINAL", v);
   cout << endl;
   return 0;
 }
