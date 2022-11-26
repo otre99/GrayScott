@@ -39,7 +39,7 @@ double *MatrixWrapper::GetRow(int row) { return data_->data() + row * n_; }
 //}
 
 constexpr double delta1 = 0.0;
-constexpr double delta2 = 0.05;
+constexpr double delta2 = 0.1;
 const static double PI = std::acos(-1);
 void AddNoise(vector<double> &u, vector<double> &v) {
   random_device rd;
