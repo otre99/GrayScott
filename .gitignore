@@ -2,3 +2,4 @@
 /qt_app-Release/*
 /cpp/CMakeLists.txt.user
 CMakeLists.txt.user
+/rust/.vscode/*

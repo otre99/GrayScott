@@ -3,6 +3,13 @@ from scipy.ndimage import laplace
 import argparse
 from matplotlib.colors import LightSource
 import time
+WITH_CPP_CODE = True
+try:
+    import libgray_scott_cpp
+except ImportError as e:
+    print("Error: {}".format(e))
+    WITH_CPP_CODE = False
+
 
 class GrayScottSover:
     def __init__(self, kparam: float, fparam: float, mu: float, mv: float, dim: int):
@@ -22,10 +29,12 @@ class GrayScottSover:
         r1 = self.dim // 2 - r
         r2 = self.dim // 2 + r
 
-        self.u[...] = 1.0
-        self.u[r1:r2, r1:r2] = 0.5
-        self.v[...] = 0.0
-        self.v[r1:r2, r1:r2] = 0.25
+        sp0 = self.u.shape
+        sp1 = (2*r, 2*r)
+        self.u[...] = 1.0 + 0.1*np.random.rand(*sp0)
+        self.u[r1:r2, r1:r2] = 0.5 + 0.1*np.random.rand(*sp1)
+        self.v[...] = 0.0 + 0.1*np.random.rand(*sp0)
+        self.v[r1:r2, r1:r2] = 0.25 + 0.1*np.random.rand(*sp1)
 
     def display_parameters(self):
         print("Parameters:")
@@ -35,14 +44,21 @@ class GrayScottSover:
         print("  kparam -> {}".format(self.kparam))
         print("  fparam -> {}".format(self.fparam))
 
-    def step(self):
-        laplace(input=self.u, output=self.uTemp, mode='wrap')
-        laplace(input=self.v, output=self.vTemp, mode='wrap')
-        uv2 = self.u*self.v**2
-        self.u += self.uTemp*self.mu - uv2 + self.fparam * (1-self.u)
-        self.v += self.vTemp*self.mv + uv2 - (self.fparam+self.kparam)*self.v
+    def step_cpp(self, nsteps: int):
+        swp = libgray_scott_cpp.euler_step(u=self.u, v=self.v, uOut=self.uTemp, vOut=self.vTemp,
+                                           f=self.fparam, k=self.kparam, mu=self.mu, mv=self.mv, nsteps=nsteps)
+        if swp:
+            self.u, self.v = self.uTemp, self.vTemp
 
-        self.inter_count += 1
+    def step(self, nsteps):
+        for _ in range(nsteps):
+            laplace(input=self.u, output=self.uTemp, mode='wrap')
+            laplace(input=self.v, output=self.vTemp, mode='wrap')
+            uv2 = self.u*self.v**2
+            self.u += self.uTemp*self.mu - uv2 + self.fparam * (1-self.u)
+            self.v += self.vTemp*self.mv + uv2 - \
+                (self.fparam+self.kparam)*self.v
+            self.inter_count += 1
 
 
 def show_data(ax, data, cmap, title=""):
@@ -65,12 +81,16 @@ def create_cmd_parser():
     p.add_argument("--mu", default=0.16, type=float, help="mu parameter")
     p.add_argument("--mv", default=0.08, type=float, help="mv parameter")
     p.add_argument("--dim", default=256, type=int, help="dim parameter")
-    p.add_argument("--nsteps", default=10000, type=int, help="nsteps parameter")
+    p.add_argument("--nsteps", default=10000,
+                   type=int, help="nsteps parameter")
     p.add_argument('--cmap', type=str, default="jet", help="Colormap")
+    p.add_argument('--pure_python', action="store_true",
+                   help="Use pure pure python implementation")
     return p
 
 
 if __name__ == "__main__":
+    import sys
     import matplotlib.pyplot as plt
 
     parser = create_cmd_parser()
@@ -78,16 +98,24 @@ if __name__ == "__main__":
 
     if UNKNOWN:
         print("Warning: Unknown arguments {}".format(UNKNOWN))
-    gs = GrayScottSover(fparam=FLAGS.fparam, kparam=FLAGS.kparam, mu=FLAGS.mu, mv=FLAGS.mv, dim=FLAGS.dim)
+
+    if FLAGS.pure_python == False and WITH_CPP_CODE == False:
+        print("""You must compile the pybind11 module: `libgray_scott_cpp` in order to
+speed up calculations using c++ code. Add the `--pure_python` argument 
+to run the script""")
+        sys.exit(0)
+
+    gs = GrayScottSover(fparam=FLAGS.fparam, kparam=FLAGS.kparam,
+                        mu=FLAGS.mu, mv=FLAGS.mv, dim=FLAGS.dim)
     gs.display_parameters()
     print("  nsteps -> {}".format(FLAGS.nsteps))
 
+    solver_funct = gs.step if FLAGS.pure_python else gs.step_cpp
     t0 = time.time()
-    for _ in range(FLAGS.nsteps):
-        gs.step()
+    solver_funct(FLAGS.nsteps)
     t1 = time.time()
-    print("Elapsed time {:.4f} seconds".format(t1-t0))
 
+    print("Elapsed time {:.4f} seconds".format(t1-t0))
     fig = plt.figure()
     fig.set_size_inches((14, 6))
     ax = plt.subplot(1, 2, 1)
@@ -95,5 +123,4 @@ if __name__ == "__main__":
     ax = plt.subplot(1, 2, 2, sharex=ax, sharey=ax)
     show_data(ax=ax, data=gs.v, cmap=FLAGS.cmap, title="V data")
     plt.tight_layout()
-
     plt.show()
