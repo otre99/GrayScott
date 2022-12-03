@@ -16,7 +16,7 @@ add_executable(gray_scott_cpp
     src/grayscott_utils.cpp src/grayscott_utils.h
 )
 
-target_link_libraries(gray_scott_cpp tbb pthread)
+target_link_libraries(gray_scott_cpp pthread tbb)
 
 install(TARGETS gray_scott_cpp
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
